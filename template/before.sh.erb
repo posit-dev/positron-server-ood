@@ -16,7 +16,7 @@ export POSITRON_SERVER_IMAGE=<%= context.apptainer_image %>
 
 # Set License Key File path for Positron activation
 # TODO: Update this path to actual license location
-export POSITRON_LICENSE_KEY_FILE="/opt/apps/licenses/positron/resources/activation/linux/x86_64/license.lic"
+export POSITRON_LICENSE_KEY_FILE="/opt/positron/resources/activation/linux/x86_64/license.lic"
 
 # Is GPU Job?
 <%- if context.num_gpus.to_s == "0" -%>
