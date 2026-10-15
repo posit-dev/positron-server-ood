@@ -78,10 +78,14 @@ never opened. See [The port never opens](#the-port-never-opens).
 
 ### `positron-server: command not found`
 
-The job did not find the server. Check, in this order:
+The job did not find the server. The job runs on the compute node that the
+session card names, with a login shell, so the OOD host's `PATH` and the
+shell you tested in do not count. Check, in this order:
 
 1. `positron_server_dir` in `form.yml` is the directory that contains
-   `bin/positron-server`, and every compute node mounts it.
+   `bin/positron-server`. On the compute node from the session card, run
+   `ls <positron_server_dir>/bin`. An install that exists on the OOD host
+   or the login node but not on the compute node fails exactly this way.
 2. If you use a module, `positron_module` names a module that exists on the
    compute nodes, and the module adds `bin` to `PATH`. The rendered
    `script.sh` in the session directory shows the exact `module load` line.

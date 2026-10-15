@@ -45,16 +45,16 @@ its value, replace the whole field entry with a string, for example
 | Field | Label | Default | Description |
 |---|---|---|---|
 | `working_dir` | Working directory | user's home | The directory Positron opens. The user picks it with the OOD file picker. A path that does not exist falls back to the home directory. |
-| `bc_account` | Account | empty | Slurm account. Empty means the user's default account. OOD passes it as `--account`. |
-| `bc_queue` | Partition | empty | Slurm partition. Empty means the default partition. OOD passes it as `--partition`. |
+| `bc_account` | Account | none | Slurm account, passed as `--account`. With no value, OOD omits the option and Slurm uses the user's default account. |
+| `bc_queue` | Partition | none | Slurm partition, passed as `--partition`. With no value, OOD omits the option and Slurm uses the default partition. |
 | `bc_num_hours` | Hours | `1` | Wall time in hours. OOD passes it as `--time`. |
 | `num_cores` | Cores | `1` | CPU cores. Passed as `--cpus-per-task`. |
 | `memory_gb` | Memory (GB) | `2.5` | Memory for the job, in GB. Passed as `--mem` in MB. Positron Server needs at least 2.5 GB. |
 | `num_gpus` | GPUs | `0` | Number of GPUs. When above 0, the job adds `--gres=gpu:<n>`. See [GPUs](#gpus). |
 
 `bc_account`, `bc_queue`, and `bc_num_hours` are OOD built-in fields. OOD
-turns them into Slurm options itself. The `native` list in `submit.yml.erb`
-adds the rest:
+turns them into Slurm options itself, and leaves the option out of the job
+when the field is blank. The `native` list in `submit.yml.erb` adds the rest:
 
 ```{.yaml filename="submit.yml.erb"}
 script:
@@ -153,7 +153,8 @@ From: rockylinux/rockylinux:9
 %post
     dnf install -y tar gzip
     mkdir -p /opt/positron-server
-    curl -L {{< var positron.url-x64 >}} \
+    CDN=https://cdn.posit.co/positron/releases/server
+    curl -L "$CDN/x86_64/positron-server-linux-x64-{{< var positron.version >}}.tar.gz" \
       | tar -xz -C /opt/positron-server --strip-components=1
     install -m 644 /opt/license.lic \
       /opt/positron-server/resources/activation/linux/<arch>/license.lic

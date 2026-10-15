@@ -21,8 +21,7 @@ You need:
 - At least 2.5 GB of RAM per session on the compute nodes.
 - Compute nodes with glibc 2.34 or newer and OpenSSL 3, for example RHEL 9,
   Rocky Linux 9, or Ubuntu 22.04 or newer. The `license-manager` binary that
-  checks the license file needs both. On RHEL 8 and Rocky Linux 8 the license
-  check fails, and every session stops with a license error.
+  checks the license file needs both.
 
 The compute nodes also need the `shuf` command and `ss` or `lsof`, which OOD
 uses to find a free port. Standard Linux distributions have them.
@@ -41,42 +40,54 @@ of your compute nodes:
 
 Unpack it into a directory that every compute node can read. This guide uses
 `/opt/positron-server`. To download and unpack from the command line, run the
-commands for your architecture.
+commands for your architecture as root, on a host that mounts that directory.
 
 **For x86_64:**
 
 ```{.bash filename="Terminal"}
-curl -L -o /tmp/positron-server.tar.gz {{< var positron.url-x64 >}}
+CDN=https://cdn.posit.co/positron/releases/server
+curl -L -o /tmp/positron-server.tar.gz \
+  "$CDN/x86_64/positron-server-linux-x64-{{< var positron.version >}}.tar.gz"
 mkdir -p /opt/positron-server
-tar -xzf /tmp/positron-server.tar.gz -C /opt/positron-server --strip-components=1
+tar -xzf /tmp/positron-server.tar.gz -C /opt/positron-server \
+  --strip-components=1
 ```
 
 **For ARM64:**
 
 ```{.bash filename="Terminal"}
-curl -L -o /tmp/positron-server.tar.gz {{< var positron.url-arm64 >}}
+CDN=https://cdn.posit.co/positron/releases/server
+curl -L -o /tmp/positron-server.tar.gz \
+  "$CDN/arm64/positron-server-linux-arm64-{{< var positron.version >}}.tar.gz"
 mkdir -p /opt/positron-server
-tar -xzf /tmp/positron-server.tar.gz -C /opt/positron-server --strip-components=1
+tar -xzf /tmp/positron-server.tar.gz -C /opt/positron-server \
+  --strip-components=1
 ```
 
-Confirm the install from a compute node:
+Confirm the install from a compute node, not from the OOD host:
 
 ```{.bash filename="Terminal"}
 /opt/positron-server/bin/positron-server --version
 ```
 
-If your site uses environment modules, you can make a module that adds
-`/opt/positron-server/bin` to `PATH` instead. See
+In Step 3 you tell the app where this directory is. If your site provides
+software through environment modules, you can make a module for Positron
+Server and name that module in Step 3 instead. See
 [Install location](configuration.qmd#install-location).
 
 ## Step 2: Place the license file {#place-the-license-file}
 
-Copy the license file into the activation directory, next to the bundled
-`license-manager` binary. In the path below, replace `<arch>` with `x86_64`
-or `aarch64`.
+Posit sends the license file to you directly. It is a small text file that
+starts with `-----BEGIN RSTUDIO LICENSE-----`, and its name varies.
+
+Copy it into the activation directory, next to the bundled `license-manager`
+binary, with the name `license.lic`. In the command below, replace
+`/path/to/your-license.lic` with the file you received, and `<arch>` with
+`x86_64` or `aarch64`:
 
 ```{.bash filename="Terminal"}
-install -m 644 license.lic /opt/positron-server/resources/activation/linux/<arch>/license.lic
+install -m 644 /path/to/your-license.lic \
+  /opt/positron-server/resources/activation/linux/<arch>/license.lic
 ```
 
 The license file needs mode `644`. Each session runs `positron-server` as the

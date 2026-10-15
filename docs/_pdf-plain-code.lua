@@ -5,7 +5,7 @@ function CodeBlock(el)
   -- The chapter's YAML header arrives as a code block; Quarto removes it later.
   if not quarto.doc.is_format("pdf") or el.classes:includes("quarto-title-block") then return nil end
   return pandoc.RawBlock("latex",
-    "\\begin{Shaded}\n\\begin{Verbatim}[breaklines,breakanywhere,fontsize=\\small]\n"
+    "\\begin{Shaded}\n\\begin{Verbatim}[breaklines,breakanywhere,breaksymbolleft={},fontsize=\\small]\n"
     .. el.text .. "\n\\end{Verbatim}\n\\end{Shaded}")
 end
 

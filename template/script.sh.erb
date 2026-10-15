@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash -l
 <%-
 working_dir = Pathname.new(context.working_dir.to_s)
 working_dir = Pathname.new(ENV['HOME']) unless working_dir.exist?
