@@ -199,23 +199,25 @@ that validates:
 4. A `.lic` file in the activation directory,
    `<install>/resources/activation/linux/<arch>/`.
 
-The first three are for signed per-session keys, which a product such as
-Posit Workbench mints. The app does not set any of them. The license file
+The app sets none of the first three. They take a signed per-session key,
+which a product such as Posit Workbench mints, and on Positron Server
+2026.09.0 and newer they also take a raw `license.lic`. The license file
 from Posit goes in the activation directory, item 4, as
-[Get started](get_started.qmd#place-the-license-file) describes.
+[Get started](get_started.qmd#place-the-license-file) describes. That
+needs no change to the app and works on a read-only install.
 
-If the install directory is read-only, or the same install serves several
-clusters, you have two options:
+If you would rather keep the license file somewhere else, you have two
+options:
 
 - With Apptainer, bind the file to the exact path inside the image. Add
   `/path/to/license.lic:/opt/positron-server/resources/activation/linux/<arch>/license.lic:ro`
-  to `apptainer_binds`.
-- Without Apptainer, set `POSITRON_LICENSE_KEY_FILE` to the path of
-  `license.lic` in `script.sh.erb`, before the server starts. On Positron
-  Server 2026.09.0 and newer, this variable accepts a raw `license.lic`.
-  The server then copies the file into the activation directory, so the
-  directory must be writable by the first session that starts. On a
-  read-only install, use the Apptainer bind instead.
+  to `apptainer_binds`. This also works on a read-only install.
+- Without Apptainer, pass the file to the server. Add
+  `--license-key-file "/path/to/license.lic"` to `POSITRON_ARGS` in
+  `script.sh.erb`, or export `POSITRON_LICENSE_KEY_FILE` before the server
+  starts. The server copies the file into the activation directory, so the
+  directory must be writable by the first session that starts, and later
+  sessions use the copy.
 
 ## Next steps
 

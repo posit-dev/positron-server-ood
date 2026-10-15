@@ -206,9 +206,15 @@ The session is **Running**, but the new tab does not show Positron.
 - **The host name is rejected.** `host_regex` in `ood_portal.yml` does not
   match the node name that the session card shows. Change the pattern so it
   matches every compute node.
-- **The tab shows `403 Forbidden`.** The address has no `tkn` parameter. This
-  happens when a user copies the address without the token, or after the
-  token cookie expires. Use the **Connect to Positron** button again.
+- **The tab shows `403 Forbidden`.** Positron Server did not get a token it
+  accepts. If a user copied the address without the `tkn` parameter, or the
+  token cookie expired, the **Connect to Positron** button fixes it. If the
+  button itself lands on **Forbidden**, the token did not reach one side.
+  In the session directory, `connection.yml` must have a `password` line
+  and `connection-token` must hold the same value. An empty `password`
+  means `before.sh` did not run, usually because an edit to
+  `template/before.sh.erb` broke it, and the rendered `before.sh` in the
+  session directory shows what ran.
 - **The tab stays blank with no error.** The browser blocked the pop-up, or
   the page is still loading its assets through the proxy. Allow pop-ups for
   the OOD host and reload the tab.

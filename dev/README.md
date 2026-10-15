@@ -5,35 +5,6 @@ Docker, with the Positron app from the repository root installed. Use it to
 launch a Positron session in a browser before you deploy the app to a real
 cluster.
 
-## Why this base
-
-Two candidates were evaluated:
-
-- [OSC/ondemand `Dockerfile.example`](https://github.com/OSC/ondemand/blob/master/Dockerfile.example)
-  installs OOD on Rocky Linux 9 and nothing else. It has no scheduler, no
-  compute node, and no user accounts, so each of those would need to be
-  built and wired to OOD by hand.
-- [ubccr/hpc-toolset-tutorial](https://github.com/ubccr/hpc-toolset-tutorial)
-  publishes images for OOD, Slurm (controller, database, and nodes), LDAP,
-  and a login node, with OOD already configured for the cluster and for the
-  `/rnode/` reverse proxy. The images are published for amd64 and arm64.
-
-The tutorial needs less setup, so this environment uses its images. It drops
-the ColdFront, XDMoD, and MongoDB services, which the app does not need. The
-tutorial repository is archived, but the `2025.02` images are still on Docker
-Hub and run as published.
-
-Two parts are replaced:
-
-- The compute nodes are built from [`compute/Dockerfile`](compute/Dockerfile)
-  on Rocky Linux 9, with Slurm at the tutorial's version, R, Python 3.12, and
-  `ipykernel`. The tutorial's Rocky Linux 8 nodes cannot run the
-  `license-manager` binary that Positron Server bundles, which needs glibc
-  2.34 and OpenSSL 3.
-- The OOD container reissues its TLS certificate at start, through
-  [`ondemand/entrypoint.sh`](ondemand/entrypoint.sh), because the published
-  image's certificate has expired.
-
 ## Requirements
 
 - Docker with Compose v2, and about 25 GB of free disk space.
@@ -125,3 +96,32 @@ docker compose down -v       # remove containers and volumes, keep .cache/
   The R extension log shows no discovery output at all. Python sessions work.
   Until this is understood, the R items on the test checklist cannot be run
   here.
+
+## Why these images
+
+Two candidates were evaluated:
+
+- [OSC/ondemand `Dockerfile.example`](https://github.com/OSC/ondemand/blob/master/Dockerfile.example)
+  installs OOD on Rocky Linux 9 and nothing else. It has no scheduler, no
+  compute node, and no user accounts, so each of those would need to be
+  built and wired to OOD by hand.
+- [ubccr/hpc-toolset-tutorial](https://github.com/ubccr/hpc-toolset-tutorial)
+  publishes images for OOD, Slurm (controller, database, and nodes), LDAP,
+  and a login node, with OOD already configured for the cluster and for the
+  `/rnode/` reverse proxy. The images are published for amd64 and arm64.
+
+The tutorial needs less setup, so this environment uses its images. It drops
+the ColdFront, XDMoD, and MongoDB services, which the app does not need. The
+tutorial repository is archived, but the `2025.02` images are still on Docker
+Hub and run as published.
+
+Two parts are replaced:
+
+- The compute nodes are built from [`compute/Dockerfile`](compute/Dockerfile)
+  on Rocky Linux 9, with Slurm at the tutorial's version, R, Python 3.12, and
+  `ipykernel`. The tutorial's Rocky Linux 8 nodes cannot run the
+  `license-manager` binary that Positron Server bundles, which needs glibc
+  2.34 and OpenSSL 3.
+- The OOD container reissues its TLS certificate at start, through
+  [`ondemand/entrypoint.sh`](ondemand/entrypoint.sh), because the published
+  image's certificate has expired.
