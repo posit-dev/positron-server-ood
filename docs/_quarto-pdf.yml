@@ -1,0 +1,37 @@
+project:
+  type: book
+  output-dir: _book
+
+book:
+  title: "Positron Server on Open OnDemand"
+  subtitle: "Install, configure, and test the positron-server-ood app"
+  author: "Posit, PBC"
+  date: today
+  chapters:
+    - index.qmd
+    - get_started.qmd
+    - configuration.qmd
+    - troubleshooting.qmd
+    - test_checklist.qmd
+
+format:
+  pdf:
+    documentclass: scrreprt
+    toc: true
+    number-sections: true
+    colorlinks: true
+    geometry:
+      - margin=1in
+    include-in-header:
+      text: |
+        \usepackage{fvextra}
+        \usepackage{framed}
+        \makeatletter
+        \@ifundefined{Shaded}{\definecolor{shadecolor}{RGB}{241,243,245}\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}}{}
+        \makeatother
+        \usepackage{float}
+        \usepackage{needspace}
+        \AtBeginDocument{\floatplacement{codelisting}{H}}
+    filters:
+      - at: pre-quarto
+        path: _pdf-plain-code.lua

@@ -1,96 +1,39 @@
-#!/usr/bin/bash -l
+#!/usr/bin/env bash
+<%-
+working_dir = Pathname.new(context.working_dir.to_s)
+working_dir = Pathname.new(ENV['HOME']) unless working_dir.exist?
+working_dir = working_dir.parent if working_dir.file?
+-%>
+echo "TIMING - Starting main script at: $(date)"
+echo "$(date): Running on $(hostname):${port}"
 
-#Command Tracing
-set -x
+<%- unless context.positron_module.blank? -%>
+module load <%= context.positron_module %>
+<%- end -%>
+<%- unless context.positron_server_dir.blank? -%>
+export PATH="<%= context.positron_server_dir %>/bin:${PATH}"
+export APPTAINERENV_PREPEND_PATH="<%= context.positron_server_dir %>/bin"
+<%- end -%>
 
-<%
+POSITRON_ARGS=(
+  --host "0.0.0.0"
+  --port "${port}"
+  --connection-token-file "${POSITRON_CONNECTION_TOKEN_FILE}"
+  --accept-server-license-terms
+  --telemetry-level off
+  --disable-workspace-trust
+  --default-folder "<%= working_dir %>"
+)
 
-# Set our working directory.
-working_dir = Pathname.new(context.working_dir)
-
-# Ensure that positron-server always starts up in either a user defined directory or the home directory.
-if ! working_dir.exist?
-    working_dir = Pathname.new(ENV['HOME'])
-elsif working_dir.file?
-    working_dir = working_dir.parent
-end
-%>
-
-# Positron stores state in ~/.config/Positron
-POSITRON_DATAROOT="$HOME/.config/Positron"
-mkdir -p "$POSITRON_DATAROOT/extensions"
-
-# Generate connection token file for authentication
-echo "$password" > "$POSITRON_DATAROOT/connection-token"
-chmod 600 "$POSITRON_DATAROOT/connection-token"
-
-# Print compute node.
-echo "$(date): Running on compute node ${compute_node}:$port"
-
-#
-# Start Positron Server.
-#
-echo "$(date): Started positron-server"
-echo ""
-
-# Setup Bind Mounts
-BPath="$TMPDIR:/tmp"
-BPath+=",/work:/work"
-BPath+=",/cwork:/cwork"
-BPath+=",/hpc/group:/hpc/group"
-BPath+=",/hpc/dctrl:/hpc/dctrl"
-<% if context.externalnfs.present? %>
-# trigger automount for externalnfs if present
-export NFSMOUNT=/nfs/<%= context.externalnfs %>
-echo "NFSMOUNT is ${NFSMOUNT}"
-ls /nfs/<%= context.externalnfs %>
-BPath+=",${NFSMOUNT}:${NFSMOUNT}"
-<% end %>
-
-# Bind mount the license file for Positron activation
-BPath+=",${POSITRON_LICENSE_KEY_FILE}:${POSITRON_LICENSE_KEY_FILE}:ro"
-
-echo "BPath: $BPath"
-echo ""
-echo "Image: $POSITRON_SERVER_IMAGE"
-echo "License: $POSITRON_LICENSE_KEY_FILE"
-echo ""
-
-echo "host: ${host}"
-echo "port: ${port}"
-
-export PORT=${port}
-export WORKING_DIR="<%= working_dir.to_s %>"
-export DATAROOT=$POSITRON_DATAROOT
-
-# Launch Positron Server
-echo "TIMING - Starting Positron Server at: $(date)"
-
-# Positron uses connection-token-file for auth (not code-server's PASSWORD env var)
-# --without-connection-token would skip auth entirely (not recommended)
-
-if [ "$gpu_job" == "no" ]; then
-  apptainer -vvv exec --bind="$BPath" "$POSITRON_SERVER_IMAGE" \
-    positron-server \
-    --host="0.0.0.0" \
-    --port="$PORT" \
-    --connection-token-file="$DATAROOT/connection-token" \
-    --accept-server-license-terms \
-    --extensions-dir="$DATAROOT/extensions" \
-    --user-data-dir="$DATAROOT" \
-    --telemetry-level="off" \
-    --log="info" \
-    "$WORKING_DIR"
-else
-  apptainer -vvv exec --nv --bind="$BPath" "$POSITRON_SERVER_IMAGE" \
-    positron-server \
-    --host="0.0.0.0" \
-    --port="$PORT" \
-    --connection-token-file="$DATAROOT/connection-token" \
-    --accept-server-license-terms \
-    --extensions-dir="$DATAROOT/extensions" \
-    --user-data-dir="$DATAROOT" \
-    --telemetry-level="off" \
-    --log="info" \
-    "$WORKING_DIR"
-fi
+echo "TIMING - Starting positron-server at: $(date)"
+<%- if context.apptainer_image.blank? -%>
+exec positron-server "${POSITRON_ARGS[@]}"
+<%- else -%>
+BINDS="${PWD}"
+[[ -n "${TMPDIR:-}" ]] && BINDS+=",${TMPDIR}"
+<%- unless context.apptainer_binds.blank? -%>
+BINDS+=",<%= context.apptainer_binds %>"
+<%- end -%>
+exec apptainer exec <%= '--nv ' if context.num_gpus.to_i > 0 %>--bind "${BINDS}" \
+  "<%= context.apptainer_image %>" positron-server "${POSITRON_ARGS[@]}"
+<%- end -%>

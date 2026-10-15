@@ -1,0 +1,104 @@
+---
+title: "Test checklist"
+---
+
+Run this list after you install the app. Each item has a step and an expected
+result. Record pass or fail for each item, and attach the session log for any
+failure. [Troubleshooting](troubleshooting.qmd) explains where the log is.
+
+Use a normal user account, not root. Use a cluster node with R and Python
+installed, with the Python `ipykernel` package available to that Python.
+
+## 1. Launch
+
+**Step:** Open **Interactive Apps**, then **Positron**. Leave the form at its
+defaults and select **Launch**.
+
+**Expected:** A session card appears under **My Interactive Sessions**. Within
+a few minutes it changes from **Queued** to **Starting** to **Running**, and a
+**Connect to Positron** button appears.
+
+## 2. Connect
+
+**Step:** Select **Connect to Positron**.
+
+**Expected:** Positron opens in a new browser tab. The address starts with
+`/rnode/`, followed by the node name and port. No sign-in page appears. The
+Welcome page or an empty editor is visible, and the status bar is at the
+bottom of the window.
+
+## 3. R console
+
+**Step:** In the console pane, select the interpreter picker and choose an R
+version. If no R shows in the list, the node has no R on `PATH`. Then run:
+
+```r
+x <- c(1, 2, 3)
+mean(x)
+```
+
+**Expected:** The console prints `[1] 2`. The variables pane shows `x`.
+
+## 4. Python console
+
+**Step:** In the interpreter picker, choose a Python version. Then run:
+
+```python
+import sys
+sys.version
+```
+
+**Expected:** The console prints the Python version. The variables pane
+shows no error. If Positron offers to install `ipykernel`, accept, and
+report the version it installs.
+
+## 5. Open a file in the working directory
+
+**Step:** In the explorer pane, open a file from the working directory, or
+create `hello.R`, type `print("hello")`, and save it with Ctrl+S.
+
+**Expected:** The file opens in the editor and saves without an error. The
+file is visible from a shell on the cluster, in the same directory.
+
+## 6. Plots
+
+**Step:** In the R console, run:
+
+```r
+plot(1:10)
+```
+
+**Expected:** The plots pane shows a scatter plot of ten points.
+
+## 7. Data explorer
+
+**Step:** In the R console, run:
+
+```r
+View(mtcars)
+```
+
+**Expected:** A data explorer tab opens with 32 rows and 11 columns. Sorting a
+column by its header works.
+
+## 8. Session ends cleanly
+
+**Step:** Close the Positron tab. In OOD, select **Delete** on the session
+card and confirm.
+
+**Expected:** The session card disappears. `squeue -u <user>` on the cluster
+shows no job for the session. The session output directory keeps
+`output.log`, and the log ends without an error.
+
+## 9. A second session
+
+**Step:** Launch the app again with the same user.
+
+**Expected:** The session starts faster than the first one, and the
+extensions and settings from the first session are still there.
+
+## Report
+
+Send Posit the pass or fail result for each item, the Positron Server
+version from `positron-server --version`, the OOD version from
+**Help**, then **About**, and the session log for any failed item.

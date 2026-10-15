@@ -1,34 +1,12 @@
-<%-
-  argarr = addargs.split(" ")
-%>
 ---
 batch_connect:
-  template: basic
+  template: "basic"
 script:
-  queue_name: <%= auto_queues %>
   native:
-    - "--account"
-    - "<%= auto_accounts %>"
-    - "--nodes"
-    - "<%= bc_num_slots.blank? ? 1 : bc_num_slots.to_i %>"
-    - "--ntasks"
-    - "<%= bc_num_slots.blank? ? 1 : bc_num_slots.to_i %>"
-    - "--cpus-per-task"
-    - "<%= num_cpus.blank? ? 1 : num_cpus.to_i %>"
-    - "--mem"
-    - "<%= num_mem.blank? ? 1 : num_mem.to_i %>G"
-
-    <%- unless email.blank? -%>
-    - "--mail-user"
-    - "<%= email %>"
-    - "--mail-type"
-    - "BEGIN,END,FAIL"
-    <%- end -%>
-
-    <%- if num_gpus.to_i >0 -%>
-    - "--gres"
-    - "gpu:<%= num_gpus.to_i %>"
-    <%- end -%>
-    <%- argarr.each do |arg| %>
-    - "<%= arg %>"
-    <%- end %>
+    - "--nodes=1"
+    - "--ntasks=1"
+    - "--cpus-per-task=<%= num_cores.blank? ? 1 : num_cores.to_i %>"
+    - "--mem=<%= ((memory_gb.blank? ? 2.5 : memory_gb.to_f) * 1024).round %>M"
+<%- if num_gpus.to_i > 0 -%>
+    - "--gres=gpu:<%= num_gpus.to_i %>"
+<%- end -%>
