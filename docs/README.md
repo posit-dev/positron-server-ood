@@ -3,6 +3,11 @@
 The site is a [Quarto](https://quarto.org/) website. GitHub Actions renders it
 on every push to `main` and publishes it to GitHub Pages.
 
+The Posit brand in `_brand/` comes from
+[posit-dev/posit-brand](https://github.com/posit-dev/posit-brand). Quarto
+applies it to the site and the PDF. To update it, run
+`quarto use brand posit-dev/posit-brand` in this directory.
+
 ## Build the site
 
 ```bash
@@ -14,16 +19,18 @@ The site is written to `docs/_site/`.
 
 ## Build a single PDF
 
-The `pdf` profile renders the same pages as one book:
-
 ```bash
 cd docs
-quarto render --profile pdf --to pdf
+./build-pdf.sh
 ```
 
-The PDF is written to `docs/_book/Positron-Server-on-Open-OnDemand.pdf`.
-The PDF build needs a LaTeX install. If you do not have one, run
-`quarto install tinytex` once.
+The script joins the pages into one document and renders it with Typst,
+which Quarto bundles, so no LaTeX install is needed. The PDF is written to
+`docs/Positron-Server-on-Open-OnDemand.pdf`.
+
+`fonts/` holds static Open Sans and Source Code Pro faces for the PDF. Typst
+uses one weight of the variable font files that the brand ships, which loses
+bold text and makes code extra light.
 
 ## Update the Positron Server version
 

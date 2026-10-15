@@ -1,6 +1,9 @@
 project:
   type: website
   output-dir: _site
+  render:
+    - "*.qmd"
+    - "!pdf.qmd"
   resources:
     - images/posit-logo.svg
 
@@ -34,3 +37,4 @@ format:
     theme: cosmo
     toc: true
     code-copy: true
+    syntax-highlighting: arrow-light

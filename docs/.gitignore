@@ -3,4 +3,5 @@
 /*.pdf
 
 **/*.quarto_ipynb
-/_book/
+/pdf.qmd
+/*.typ
