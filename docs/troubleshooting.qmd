@@ -1,0 +1,260 @@
+---
+title: "Troubleshooting"
+---
+
+When a Positron session does not start, the cause is almost always in one of
+three places: the install on the compute node, the license file, or the OOD
+reverse proxy. This page is organized by symptom. Each section says where to
+look and what the log shows.
+
+## Where to look first
+
+Every session has an output directory under the user's home directory:
+
+```text
+~/ondemand/data/sys/dashboard/batch_connect/sys/positron/output/<session-id>/
+```
+
+The **Session ID** link on the session card opens this directory in the OOD
+file browser. `output.log` holds everything the job printed, including the
+messages from `positron-server`. The directory also keeps the rendered
+`script.sh` and `before.sh`, and `job_script_options.json` with the Slurm
+options that OOD submitted.
+
+A healthy start looks like this:
+
+```text
+Script starting...
+Wed Oct 14 20:35:05 UTC 2026: Waiting for Positron Server to open port 25184...
+TIMING - Starting main script at: Wed Oct 14 20:35:05 UTC 2026
+Wed Oct 14 20:35:05 UTC 2026: Running on cpn01:25184
+TIMING - Starting positron-server at: Wed Oct 14 20:35:05 UTC 2026
+Server bound to 0.0.0.0:25184 (IPv4)
+Extension host agent listening on 25184
+
+Positron license verified: {"status":"activated", ...}
+Verified license from license-manager directory.
+Wed Oct 14 20:35:05 UTC 2026: Positron Server is listening on port 25184
+```
+
+After that, `positron-server` logs the extensions it unpacks on a first
+start, then `Extension host agent started.` Messages about `vsda.js` and
+`vsda_bg.wasm` not found are normal.
+
+Errors in the form itself, before a job is submitted, go to the OOD
+per-user log on the OOD host:
+
+```{.bash filename="Terminal"}
+tail -50 /var/log/ondemand-nginx/<username>/error.log
+```
+
+## The Positron tile does not appear
+
+- **The app directory has the wrong name or location.** OOD lists every
+  directory under `/var/www/ood/apps/sys/` that has a `manifest.yml`. Confirm
+  `/var/www/ood/apps/sys/positron/manifest.yml` exists.
+- **`cluster` in `form.yml` does not match a cluster file.** OOD hides an app
+  whose cluster is not defined. The value must match a file name in
+  `/etc/ood/config/clusters.d/`, without `.yml`.
+
+## The form shows a 500 error
+
+`form.yml` did not parse. Check the per-user log on the OOD host for the
+line that names the problem, then fix the YAML. A common cause is a value
+with a colon or a quote that is not quoted.
+
+## The session stays in Starting, then disappears
+
+`positron-server` exited before it opened the port, or right after. The
+session card can show **Running** for a moment, because the server opens
+the port before it checks the license. Open `output.log` and find the last
+message from `positron-server`. The sections below cover the messages you
+can see.
+
+With this app, `after.sh` stops the job as soon as `positron-server` exits,
+so the card goes away within a few seconds. On a job that stays in
+**Starting** for the full 10 minutes, the server is running but the port
+never opened. See [The port never opens](#the-port-never-opens).
+
+### `positron-server: command not found`
+
+The job did not find the server. The job runs on the compute node that the
+session card names, with a login shell, so the OOD host's `PATH` and the
+shell you tested in do not count. Check, in this order:
+
+1. `positron_server_dir` in `form.yml` is the directory that contains
+   `bin/positron-server`. On the compute node from the session card, run
+   `ls <positron_server_dir>/bin`. An install that exists on the OOD host
+   or the login node but not on the compute node fails exactly this way.
+2. If you use a module, `positron_module` names a module that exists on the
+   compute nodes, and the module adds `bin` to `PATH`. The rendered
+   `script.sh` in the session directory shows the exact `module load` line.
+3. The compute node can run the binary. On the node, run
+   `/opt/positron-server/bin/positron-server --version`.
+
+### `script.sh: Permission denied`
+
+`template/script.sh.erb` lost its execute bit, usually after a copy that did
+not keep file modes. On the OOD host, run:
+
+```{.bash filename="Terminal"}
+chmod +x /var/www/ood/apps/sys/positron/template/script.sh.erb
+```
+
+## License errors
+
+`positron-server` validates the license before it accepts connections. It
+looks for `license.lic` in its activation directory,
+`<install>/resources/activation/linux/<arch>/`, and runs the bundled
+`license-manager` to check it. Check the license on a compute node first:
+
+```{.bash filename="Terminal"}
+/opt/positron-server/resources/activation/linux/<arch>/license-manager status
+```
+
+### `No license key provided`
+
+```text
+No license key provided. A license key is required to use Positron in a hosted
+environment. Provide a license key with the --license-key or --license-key-file
+command-line arguments, or set the POSITRON_LICENSE_KEY or
+POSITRON_LICENSE_KEY_FILE environment variables.
+```
+
+Do not follow the advice in the message. It appears whenever
+`positron-server` finds no usable license, and the command-line options it
+names are for signed per-session keys that this app does not use. Check:
+
+- **The file is missing.** `ls` the activation directory on a compute node.
+  The file name must end in `.lic`.
+- **The file is in the wrong architecture directory.** `positron-server`
+  reads `linux/x86_64` on x86_64 nodes and `linux/aarch64` on ARM64 nodes.
+  Both directories ship in every archive. `uname -m` on the node tells you
+  which one it reads.
+- **The install directory is not mounted on the compute node.** The install
+  can be visible on the OOD host and absent on the node.
+
+### `libcrypto.so.3` or `GLIBC_2.34` not found
+
+```text
+license-manager: error while loading shared libraries: libcrypto.so.3:
+cannot open shared object file: No such file or directory
+```
+
+```text
+license-manager: /lib64/libc.so.6: version `GLIBC_2.34' not found
+```
+
+The bundled `license-manager` links against OpenSSL 3 and glibc 2.34. The
+compute node runs an older release, so every license check fails and the
+session log shows **No license key provided**. `positron-server` itself
+needs only glibc 2.28, so the server starts, binds the port, and then
+exits. Run the sessions on nodes with RHEL 9, Rocky Linux 9, Ubuntu 22.04,
+or a newer release. RHEL 8 and Rocky Linux 8 do not meet the glibc
+requirement, and a newer OpenSSL package alone does not fix it.
+
+### `The license file next to the license-manager binary was rejected`
+
+The file exists but `license-manager` did not accept it. The rest of the
+line names the reason:
+
+- **Permission denied**: each session reads the file as the user who
+  launched it, so a root-only mode such as `600` fails every session. Set
+  the mode to `644`.
+- **License has expired**: ask Posit for a replacement file.
+- **Invalid license result** or a signature error: the file was altered,
+  or it is not a Positron Server license. Copy the file again from the
+  original you received from Posit.
+
+## The port never opens {#the-port-never-opens}
+
+The session stays in **Starting** for 10 minutes, then disappears, and
+`output.log` ends with:
+
+```text
+Timed out waiting for Positron Server to open port 25184
+```
+
+`after.sh` checks the port from the compute node itself, so a firewall is
+not the cause here. The server is running but slow. The usual reasons:
+
+- **The first start for a user.** `positron-server` unpacks its built-in
+  extensions into `~/.positron-server` the first time. On a slow home
+  filesystem this can take several minutes. Later starts are faster.
+- **Too little memory.** Look for `oom-kill` in `output.log` or in the Slurm
+  job record with `sacct -j <jobid> -o State,MaxRSS`. Raise the memory
+  request. Positron Server needs at least 2.5 GB.
+- **`shuf`, `ss`, and `lsof` are all missing on the node.** OOD uses them to
+  find and check the port. `after.sh` cannot see the port without one of
+  them. Install `iproute` for `ss`.
+
+To give slow nodes more time, raise the `600` in `template/after.sh`.
+
+## Connect to Positron shows an error or a blank page
+
+The session is **Running**, but the new tab does not show Positron.
+
+- **OOD shows "Not Found" or its own 404 page.** The `/rnode/` reverse proxy
+  is off. Set `rnode_uri: "/rnode"` in `/etc/ood/config/ood_portal.yml`,
+  run `update_ood_portal`, and restart Apache. See
+  [Turn on the reverse proxy](get_started.qmd#turn-on-the-reverse-proxy).
+- **OOD shows "Proxy Error" or a 502.** The OOD host could not reach the
+  compute node on the session port. Either the session ended, or a firewall
+  blocks the port range between the OOD host and the compute nodes. From the
+  OOD host, run `curl -s http://<node>:<port>/` with the values from the
+  session card. OOD picks a port between 2000 and 65535 by default.
+- **The host name is rejected.** `host_regex` in `ood_portal.yml` does not
+  match the node name that the session card shows. Change the pattern so it
+  matches every compute node.
+- **The tab shows `403 Forbidden`.** Positron Server did not get a token it
+  accepts. If a user copied the address without the `tkn` parameter, or the
+  token cookie expired, the **Connect to Positron** button fixes it. If the
+  button itself lands on **Forbidden**, the token did not reach one side.
+  In the session directory, `connection.yml` must have a `password` line
+  and `connection-token` must hold the same value. An empty `password`
+  means `before.sh` did not run, usually because an edit to
+  `template/before.sh.erb` broke it, and the rendered `before.sh` in the
+  session directory shows what ran.
+- **The tab stays blank with no error.** The browser blocked the pop-up, or
+  the page is still loading its assets through the proxy. Allow pop-ups for
+  the OOD host and reload the tab.
+
+## R or Python does not appear in the console
+
+Positron finds interpreters on the `PATH` of the server process, and in the
+usual install locations. The session has the `PATH` of a login shell on the
+compute node, plus `positron_server_dir/bin`. Load the R and Python modules
+you want in `template/script.sh.erb`, before the server starts, or install
+them in a location Positron scans, such as `/usr/bin` or `/opt/R`.
+
+Python also needs the `ipykernel` package. Positron ships a bundled copy
+and uses it when the interpreter has none.
+
+The interpreter picker shows **Discovering interpreters...** while Positron
+looks for R and Python. The R extension writes what it found, and why it
+rejected an install, to a log under the user's home directory on the
+compute node:
+
+```text
+~/.local/state/positron/logs/<timestamp>/exthost*/positron.positron-r/R Language Pack.log
+```
+
+A log with no `Candidate R binary` line means discovery did not run. A
+`Filtering out` line names the install and the reason, such as a version
+below the minimum Positron supports.
+
+## Slow start
+
+- A first session for a user takes longer. See
+  [The port never opens](#the-port-never-opens).
+- Sessions on a busy partition wait in **Queued** until Slurm has a node.
+  `squeue -u <username>` shows the reason.
+- Inside Apptainer, the first start also unpacks the image. Put the `.sif`
+  file on a fast local or parallel filesystem, not on NFS over a slow link.
+
+## Still stuck?
+
+Open an issue at
+[the positron-server-ood issue tracker](https://github.com/posit-dev/positron-server-ood/issues)
+with `output.log` from the session directory, your Positron Server version,
+your OOD version, and the operating system of the compute nodes.

@@ -1,13 +1,8 @@
 <%
   require 'digest'
-
-  # Generate form id, based on host and port
   form_id = Digest::SHA1.hexdigest("--" + host.to_s + "--" + port.to_s + "--")
-
-  # Positron uses connection token passed as URL parameter (tkn=)
-  # This is different from code-server which uses a cookie
 %>
-
+<%# Positron Server expects the connection token as the tkn query parameter. %>
 <form id="<%= form_id %>" action="/rnode/<%= host %>/<%= port %>/" method="get" target="_blank">
   <input type="hidden" name="tkn" value="<%= password %>">
   <button class="btn btn-primary" type="submit">

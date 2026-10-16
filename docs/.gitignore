@@ -1,0 +1,7 @@
+/_site/
+/.quarto/
+/*.pdf
+
+**/*.quarto_ipynb
+/pdf.qmd
+/*.typ

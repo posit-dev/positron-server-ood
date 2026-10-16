@@ -1,0 +1,217 @@
+---
+title: "Get started"
+---
+
+This guide installs Positron Server on an HPC cluster and adds a Positron tile
+to Open OnDemand (OOD). You do four things: install Positron Server where the
+compute nodes can read it, place the license file, install this app on the OOD
+host, and check that the OOD reverse proxy is on. Then you launch a session and
+run the [test checklist](test_checklist.qmd).
+
+The guide installs Positron Server directly on a shared filesystem, which is
+the shortest path to a first session. If your site runs interactive apps from
+Apptainer images, do Steps 1 and 2 inside an image instead, then continue
+with Step 3. [Run inside Apptainer](configuration.qmd#run-inside-apptainer)
+covers the image.
+
+## Before you start
+
+You need:
+
+- An OOD host on OOD 3.0 or newer, with a Slurm cluster defined in
+  `/etc/ood/config/clusters.d/`. The app uses Slurm `sbatch` options.
+- Root access on the OOD host, and write access to a filesystem that every
+  compute node mounts, such as `/opt` or an applications directory.
+- A Positron Server license file (`license.lic`) from Posit. Positron Server
+  refuses to start in a hosted environment without a license.
+- At least 2.5 GB of RAM per session on the compute nodes.
+- Compute nodes with glibc 2.34 or newer and OpenSSL 3, for example RHEL 9,
+  Rocky Linux 9, or Ubuntu 22.04 or newer. The `license-manager` binary that
+  checks the license file needs both.
+
+The compute nodes also need the `shuf` command and `ss` or `lsof`, which OOD
+uses to find a free port. Standard Linux distributions have them.
+
+## Step 1: Install Positron Server {#install-positron-server}
+
+Positron Server is available only as a Linux archive from the Posit content
+delivery network (CDN). It does not appear on the Positron download page or on
+the GitHub releases page. Download the build that matches the CPU architecture
+of your compute nodes:
+
+| Architecture | Download |
+|---|---|
+| x86_64 (Intel and AMD) | [positron-server-linux-x64-{{< var positron.version >}}.tar.gz]({{< var positron.url-x64 >}}) |
+| ARM64 | [positron-server-linux-arm64-{{< var positron.version >}}.tar.gz]({{< var positron.url-arm64 >}}) |
+
+Unpack it into a directory that every compute node can read. This guide uses
+`/opt/positron-server`. To download and unpack from the command line, run the
+commands for your architecture as root, on a host that mounts that directory.
+
+**For x86_64:**
+
+```{.bash filename="Terminal"}
+CDN=https://cdn.posit.co/positron/releases/server
+curl -L -o /tmp/positron-server.tar.gz \
+  "$CDN/x86_64/positron-server-linux-x64-{{< var positron.version >}}.tar.gz"
+mkdir -p /opt/positron-server
+tar -xzf /tmp/positron-server.tar.gz -C /opt/positron-server \
+  --strip-components=1
+```
+
+**For ARM64:**
+
+```{.bash filename="Terminal"}
+CDN=https://cdn.posit.co/positron/releases/server
+curl -L -o /tmp/positron-server.tar.gz \
+  "$CDN/arm64/positron-server-linux-arm64-{{< var positron.version >}}.tar.gz"
+mkdir -p /opt/positron-server
+tar -xzf /tmp/positron-server.tar.gz -C /opt/positron-server \
+  --strip-components=1
+```
+
+Confirm the install from a compute node, not from the OOD host:
+
+```{.bash filename="Terminal"}
+/opt/positron-server/bin/positron-server --version
+```
+
+In Step 3 you tell the app where this directory is. If your site provides
+software through environment modules, you can make a module for Positron
+Server and name that module in Step 3 instead. See
+[Install location](configuration.qmd#install-location).
+
+## Step 2: Place the license file {#place-the-license-file}
+
+Posit sends the license file to you directly. It is a small text file that
+starts with `-----BEGIN RSTUDIO LICENSE-----`, and its name varies.
+
+Copy it into the activation directory, next to the bundled `license-manager`
+binary, with the name `license.lic`. In the command below, replace
+`/path/to/your-license.lic` with the file you received, and `<arch>` with
+`x86_64` or `aarch64`:
+
+```{.bash filename="Terminal"}
+install -m 644 /path/to/your-license.lic \
+  /opt/positron-server/resources/activation/linux/<arch>/license.lic
+```
+
+The license file needs mode `644`. Each session runs `positron-server` as the
+user who launched it, and `positron-server` reads the license file itself.
+With a root-only mode such as `600`, every session fails to start. This also
+means that every user who can start a session can read the file. See
+[License file location](configuration.qmd#license-file-location) for what
+that implies and for the alternative.
+
+Before you continue, confirm that `license-manager` accepts the license file.
+Run this on a compute node, or on any host with the same architecture:
+
+```{.bash filename="Terminal"}
+/opt/positron-server/resources/activation/linux/<arch>/license-manager status
+```
+
+The output reports `activated` or `evaluation` and the days left. If the
+install directory is read-only, or several clusters share one install, see
+[License file location](configuration.qmd#license-file-location) for other
+places to put the file.
+
+## Step 3: Install the app {#install-the-app}
+
+On the OOD host, clone this repository into the system apps directory:
+
+```{.bash filename="Terminal"}
+cd /var/www/ood/apps/sys
+git clone https://github.com/posit-dev/positron-server-ood.git positron
+```
+
+Then open `/var/www/ood/apps/sys/positron/form.yml` and set the site settings
+at the top of the file:
+
+```{.yaml filename="form.yml"}
+cluster: "hpc"
+
+attributes:
+  positron_server_dir: "/opt/positron-server"
+  positron_module: ""
+  apptainer_image: ""
+  apptainer_binds: ""
+```
+
+- `cluster` is the file name, without `.yml`, of your cluster in
+  `/etc/ood/config/clusters.d/`.
+- `positron_server_dir` is the directory from Step 1. Leave it empty if
+  `positron-server` is already on `PATH` on the compute nodes.
+- Leave the other three empty for a plain install.
+  [Configuration](configuration.qmd) describes them.
+
+OOD reads the app directory on each request. You do not restart anything after
+you install or edit the app.
+
+## Step 4: Turn on the reverse proxy {#turn-on-the-reverse-proxy}
+
+OOD connects the browser to the session through its reverse proxy. The app uses
+the `/rnode/` path, which is off by default. In `/etc/ood/config/ood_portal.yml`,
+set:
+
+```{.yaml filename="/etc/ood/config/ood_portal.yml"}
+rnode_uri: "/rnode"
+host_regex: "[\\w.-]+\\.example\\.com"
+```
+
+Set `host_regex` to a pattern that matches the host names of your compute
+nodes, as reported by `hostname` on the node. Then regenerate the portal
+configuration and restart Apache:
+
+```{.bash filename="Terminal"}
+/opt/ood/ood-portal-generator/sbin/update_ood_portal
+systemctl restart httpd
+```
+
+Skip this step if `rnode_uri` is already set. The Jupyter and RStudio apps
+from the OOD documentation use the same setting.
+
+## Step 5: Launch a session {#launch-a-session}
+
+1. Sign in to OOD and open **Interactive Apps**, then **Positron**.
+2. Leave the form at its defaults for the first session. The default request
+   is one core, 2.5 GB of memory, and one hour.
+3. Select **Launch**. OOD submits a Slurm job and shows the session card under
+   **My Interactive Sessions**.
+4. When the card changes to **Running**, select **Connect to Positron**.
+   Positron opens in a new tab.
+
+The first start takes longer than later starts, because Positron Server
+unpacks its built-in extensions into `~/.positron-server` for that user.
+
+## Step 6: Confirm it works {#confirm-it-works}
+
+Run the [test checklist](test_checklist.qmd). It covers the R console, the
+Python console, files, plots, the data explorer, and a clean session end.
+
+## How it works
+
+When a user selects **Launch**, OOD submits a Slurm job with the resources from
+the form. On the compute node, the job:
+
+1. Picks a free port and makes a random connection token.
+2. Loads the module or adds `positron_server_dir/bin` to `PATH`.
+3. Starts `positron-server` on that port with the token file, the license
+   terms accepted, and telemetry off.
+4. Waits up to 10 minutes for the port to open, then marks the session as
+   running.
+
+The **Connect to Positron** button opens `/rnode/<host>/<port>/?tkn=<token>`.
+OOD proxies the request to the compute node, and Positron Server checks the
+token on every request. Only the user who owns the session has the token.
+
+Positron Server checks the license before it listens on the port. A missing,
+expired, or altered license stops the session, and OOD reports a timeout.
+[Troubleshooting](troubleshooting.qmd) shows what each failure looks like in
+the session log.
+
+## Next steps
+
+- [Configuration](configuration.qmd) covers every form field and site
+  setting, Apptainer, GPUs, and extra bind mounts.
+- [Troubleshooting](troubleshooting.qmd) covers a session that does not start.
+- [Test checklist](test_checklist.qmd) is the list to run and report against.

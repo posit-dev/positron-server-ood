@@ -1,0 +1,139 @@
+# Local Open OnDemand cluster for exercising the Positron app.
+# Derived from https://github.com/ubccr/hpc-toolset-tutorial (GPLv3).
+name: positron-ood
+
+services:
+  ldap:
+    image: ubccr/hpcts:ldap-${HPCTS_VERSION}
+    hostname: ldap
+    environment:
+      - LDAP_RFC2307BIS_SCHEMA=true
+      - LDAP_REMOVE_CONFIG_AFTER_SETUP=false
+      - LDAP_TLS_VERIFY_CLIENT=never
+
+  mysql:
+    image: mariadb:${MARIADB_VERSION}
+    hostname: mysql
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    volumes:
+      - ./database:/docker-entrypoint-initdb.d:ro
+      - ./database:/etc/mysql/conf.d:ro
+      - ./slurm/slurmdbd.conf:/etc/slurm/slurmdbd.conf:ro
+      - var_lib_mysql:/var/lib/mysql
+
+  slurmdbd:
+    image: ubccr/hpcts:slurm-${HPCTS_VERSION}
+    command: ["slurmdbd"]
+    hostname: slurmdbd
+    volumes:
+      - etc_munge:/etc/munge
+      - etc_slurm:/etc/slurm
+      - home:/home
+      - ./slurm/slurm.conf:/etc/slurm/slurm.conf:ro
+      - slurmdbd_state:/var/lib/slurmd
+    depends_on: [ldap, mysql]
+
+  slurmctld:
+    image: ubccr/hpcts:slurm-${HPCTS_VERSION}
+    command: ["slurmctld"]
+    hostname: slurmctld
+    volumes:
+      - etc_munge:/etc/munge
+      - etc_slurm:/etc/slurm
+      - home:/home
+      - ./slurm/slurm.conf:/etc/slurm/slurm.conf:ro
+      - slurmctld_state:/var/lib/slurmd
+    depends_on: [ldap, slurmdbd]
+
+  cpn01:
+    build: ./compute
+    image: positron-ood-compute
+    init: true
+    command: ["slurmd"]
+    hostname: cpn01
+    cap_add: [SYS_ADMIN]
+    volumes:
+      - etc_munge:/etc/munge
+      - etc_slurm:/etc/slurm
+      - home:/home
+      - ./slurm/slurm.conf:/etc/slurm/slurm.conf:ro
+      - positron_server:/opt/positron-server
+      - cpn01_slurmd_state:/var/lib/slurmd
+    depends_on:
+      ldap: { condition: service_started }
+      slurmctld: { condition: service_started }
+      installer: { condition: service_completed_successfully }
+
+  cpn02:
+    image: positron-ood-compute
+    init: true
+    command: ["slurmd"]
+    hostname: cpn02
+    cap_add: [SYS_ADMIN]
+    volumes:
+      - etc_munge:/etc/munge
+      - etc_slurm:/etc/slurm
+      - home:/home
+      - ./slurm/slurm.conf:/etc/slurm/slurm.conf:ro
+      - positron_server:/opt/positron-server
+      - cpn02_slurmd_state:/var/lib/slurmd
+    depends_on:
+      ldap: { condition: service_started }
+      slurmctld: { condition: service_started }
+      cpn01: { condition: service_started }
+
+  frontend:
+    image: ubccr/hpcts:slurm-${HPCTS_VERSION}
+    command: ["frontend"]
+    hostname: frontend
+    volumes:
+      - etc_munge:/etc/munge
+      - etc_slurm:/etc/slurm
+      - home:/home
+      - ./slurm/slurm.conf:/etc/slurm/slurm.conf:ro
+      - positron_server:/opt/positron-server
+    ports:
+      - "127.0.0.1:6222:22"
+    depends_on: [ldap, slurmctld]
+
+  ondemand:
+    image: ubccr/hpcts:ondemand-${HPCTS_VERSION}
+    entrypoint: ["/bin/bash", "/ondemand-entrypoint.sh"]
+    command: ["serve"]
+    hostname: ondemand
+    volumes:
+      - etc_munge:/etc/munge
+      - etc_slurm:/etc/slurm
+      - home:/home
+      - ./slurm/slurm.conf:/etc/slurm/slurm.conf:ro
+      - ..:/var/www/ood/apps/sys/positron:ro
+      - ./ondemand/entrypoint.sh:/ondemand-entrypoint.sh:ro
+    ports:
+      - "127.0.0.1:3443:3443"
+      - "127.0.0.1:5554:5554"
+    depends_on: [ldap, frontend]
+
+  # Installs Positron Server into the shared volume, then exits.
+  installer:
+    image: ubccr/hpcts:slurm-${HPCTS_VERSION}
+    entrypoint: ["/bin/bash", "/install-positron-server.sh"]
+    environment:
+      POSITRON_VERSION: ${POSITRON_VERSION}
+    volumes:
+      - positron_server:/opt/positron-server
+      - ./install-positron-server.sh:/install-positron-server.sh:ro
+      - ./positron-server-wrapper.sh:/positron-server-wrapper.sh:ro
+      - ./secrets:/secrets:ro
+      - ./.cache:/cache
+
+volumes:
+  etc_munge:
+  etc_slurm:
+  home:
+  var_lib_mysql:
+  slurmdbd_state:
+  slurmctld_state:
+  cpn01_slurmd_state:
+  cpn02_slurmd_state:
+  positron_server:

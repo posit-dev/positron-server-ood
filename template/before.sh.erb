@@ -4,23 +4,8 @@
 # Find available port to run server on
 export port=$(find_port ${host})
 
-# Export compute node the script is running on
-export host="${host}"
-
-# Generate connection token for authentication
-export password="$(create_passwd 16)"
-
-# Set Singularity Image
-# TODO: Update this path once Positron container is built
-export POSITRON_SERVER_IMAGE=<%= context.apptainer_image %>
-
-# Set License Key File path for Positron activation
-# TODO: Update this path to actual license location
-export POSITRON_LICENSE_KEY_FILE="/opt/positron/resources/activation/linux/x86_64/license.lic"
-
-# Is GPU Job?
-<%- if context.num_gpus.to_s == "0" -%>
-export gpu_job="no"
-<%- else -%>
-export gpu_job="yes"
-<%- end -%>
+# Positron Server reads the connection token from a file. The Connect button
+# sends the same value as the tkn query parameter.
+password="$(create_passwd 32)"
+export POSITRON_CONNECTION_TOKEN_FILE="${PWD}/connection-token"
+(umask 077; echo "${password}" > "${POSITRON_CONNECTION_TOKEN_FILE}")

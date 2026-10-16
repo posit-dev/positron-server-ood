@@ -1,0 +1,65 @@
+# Site settings. Edit these before you deploy the app. Users do not see them.
+# See docs/configuration.qmd for what each one does.
+---
+cluster: "hpc"
+
+attributes:
+  # Directory of a plain Positron Server install. It must contain bin/positron-server.
+  # Leave empty when positron-server is already on PATH or comes from the module below.
+  positron_server_dir: "/opt/positron-server"
+
+  # Environment module to load before the server starts, for example "positron-server/2026.10.0".
+  positron_module: ""
+
+  # Apptainer image path. When set, positron-server runs inside this image.
+  apptainer_image: ""
+
+  # Extra bind mounts for Apptainer, comma separated, for example "/scratch,/project".
+  apptainer_binds: ""
+
+  # Form fields that users see.
+  working_dir:
+    widget: "path_selector"
+    label: "Working directory"
+    show_files: false
+    help: "The directory Positron opens. Defaults to your home directory."
+  bc_account:
+    label: "Account"
+    help: "Leave empty to use your default Slurm account."
+  bc_queue:
+    label: "Partition"
+    help: "Leave empty to use the default partition."
+  bc_num_hours:
+    label: "Hours"
+    value: 1
+    min: 1
+  num_cores:
+    widget: "number_field"
+    label: "Cores"
+    value: 1
+    min: 1
+  memory_gb:
+    widget: "number_field"
+    label: "Memory (GB)"
+    value: 2.5
+    min: 2
+    step: 0.5
+    help: "Positron Server needs at least 2.5 GB per session."
+  num_gpus:
+    widget: "number_field"
+    label: "GPUs"
+    value: 0
+    min: 0
+
+form:
+  - positron_server_dir
+  - positron_module
+  - apptainer_image
+  - apptainer_binds
+  - working_dir
+  - bc_account
+  - bc_queue
+  - bc_num_hours
+  - num_cores
+  - memory_gb
+  - num_gpus

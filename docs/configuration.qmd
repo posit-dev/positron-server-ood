@@ -1,0 +1,258 @@
+---
+title: "Configuration"
+---
+
+You configure the app in two files. `form.yml` holds the site settings and the
+form fields that users see. `submit.yml.erb` turns the form values into Slurm
+options. The scripts under `template/` start Positron Server on the compute
+node. This page covers each setting, then the Apptainer, GPU, and license
+options.
+
+## Site settings
+
+The site settings are the fixed values at the top of `form.yml`. Users do not
+see them. Each one is a string. An empty string turns the setting off.
+
+| Setting | Default | Description |
+|---|---|---|
+| `cluster` | `"hpc"` | The cluster the job is submitted to. It must match a file name in `/etc/ood/config/clusters.d/`, without `.yml`. The default matches the [local validation cluster](https://github.com/posit-dev/positron-server-ood/tree/main/dev). |
+| `positron_server_dir` | `"/opt/positron-server"` | Directory of a plain Positron Server install. The job adds `<positron_server_dir>/bin` to `PATH`. Leave it empty when `positron-server` is already on `PATH`, or when the module below provides it. |
+| `positron_module` | `""` | An environment module to load before the server starts, for example `positron-server/2026.10.0`. The job runs `module load` with this value. |
+| `apptainer_image` | `""` | Path to an Apptainer image. When set, the job runs `positron-server` inside this image. See [Run inside Apptainer](#run-inside-apptainer). |
+| `apptainer_binds` | `""` | Extra bind mounts for Apptainer, comma separated, for example `/scratch,/project`. Only used when `apptainer_image` is set. |
+
+### Install location {#install-location}
+
+The job finds `positron-server` in this order:
+
+1. If `positron_module` is set, the job loads that module.
+2. If `positron_server_dir` is set, the job puts `<positron_server_dir>/bin`
+   first on `PATH`.
+3. The job runs `positron-server` from `PATH`.
+
+So a site with a module sets `positron_module` and leaves
+`positron_server_dir` empty. A site with a shared directory sets
+`positron_server_dir`. A site that already has `positron-server` on every
+user's `PATH` leaves both empty.
+
+## Form fields
+
+These are the fields that users see when they launch the app. To change a
+default, edit the `value` of the field in `form.yml`. To hide a field and fix
+its value, replace the whole field entry with a string, for example
+`num_gpus: "0"`.
+
+| Field | Label | Default | Description |
+|---|---|---|---|
+| `working_dir` | Working directory | user's home | The directory Positron opens. The user picks it with the OOD file picker. A path that does not exist falls back to the home directory. |
+| `bc_account` | Account | none | Slurm account, passed as `--account`. With no value, OOD omits the option and Slurm uses the user's default account. |
+| `bc_queue` | Partition | none | Slurm partition, passed as `--partition`. With no value, OOD omits the option and Slurm uses the default partition. |
+| `bc_num_hours` | Hours | `1` | Wall time in hours. OOD passes it as `--time`. |
+| `num_cores` | Cores | `1` | CPU cores. Passed as `--cpus-per-task`. |
+| `memory_gb` | Memory (GB) | `2.5` | Memory for the job, in GB. Passed as `--mem` in MB. Positron Server needs at least 2.5 GB. |
+| `num_gpus` | GPUs | `0` | Number of GPUs. When above 0, the job adds `--gres=gpu:<n>`. See [GPUs](#gpus). |
+
+`bc_account`, `bc_queue`, and `bc_num_hours` are OOD built-in fields. OOD
+turns them into Slurm options itself, and leaves the option out of the job
+when the field is blank. The `native` list in `submit.yml.erb` adds the rest:
+
+```{.yaml filename="submit.yml.erb"}
+script:
+  native:
+    - "--nodes=1"
+    - "--ntasks=1"
+    - "--cpus-per-task=<%= num_cores.blank? ? 1 : num_cores.to_i %>"
+    - "--mem=<%= ((memory_gb.blank? ? 2.5 : memory_gb.to_f) * 1024).round %>M"
+<%- if num_gpus.to_i > 0 -%>
+    - "--gres=gpu:<%= num_gpus.to_i %>"
+<%- end -%>
+```
+
+Add your own Slurm options to this list. For example, to make every session
+use a QOS, add `- "--qos=interactive"`.
+
+### Memory
+
+Allocate memory per session based on the size of the workload:
+
+| Workload | Minimum | Recommended |
+|----------|---------|-------------|
+| Light: one console, a few extensions, simple scripts | 2 GB | 2.5 GB |
+| Standard: several consoles, several extensions, app development | 2.5 GB | 4 GB |
+| Heavy: large datasets, language servers, several apps at once | 4 GB | 6 GB or more |
+
+Slurm stops a session that goes over the request. Signs of too little memory
+are slow runtime switching, extensions that fail to install, and crashes
+during large operations.
+
+## Template variables
+
+The scripts in `template/` read the form values through `context`. They also
+set these variables:
+
+| Variable | Set in | Description |
+|---|---|---|
+| `port` | `before.sh.erb` | A free port on the compute node, from the OOD `find_port` helper. |
+| `password` | `before.sh.erb` | A random 32-character connection token. OOD writes it to the session's `connection.yml`, and the Connect button sends it as the `tkn` query parameter. |
+| `POSITRON_CONNECTION_TOKEN_FILE` | `before.sh.erb` | Path of the token file, `connection-token` in the session's output directory, mode `600`. Passed to `positron-server` as `--connection-token-file`. |
+
+`script.sh.erb` starts the server with these options:
+
+```{.bash filename="template/script.sh.erb"}
+positron-server \
+  --host "0.0.0.0" \
+  --port "${port}" \
+  --connection-token-file "${POSITRON_CONNECTION_TOKEN_FILE}" \
+  --accept-server-license-terms \
+  --telemetry-level off \
+  --disable-workspace-trust \
+  --default-folder "<working_dir>"
+```
+
+`--disable-workspace-trust` turns off the Code OSS workspace trust prompt.
+Without it, Positron opens the working directory in Restricted Mode and
+refuses to start a console until the user selects **Trust this folder**.
+The user picked the directory and owns the session, so the prompt adds
+nothing. Remove the option from `script.sh.erb` to bring the prompt back.
+
+The server keeps its data in `~/.positron-server` for each user. Extensions
+and settings persist from one session to the next.
+
+`after.sh` waits up to 600 seconds for the port to open. Raise that number
+if your compute nodes are slow to start a job.
+
+## Run inside Apptainer {#run-inside-apptainer}
+
+Many HPC sites run interactive apps from an Apptainer image rather than from
+a host install, so that the compute nodes need nothing beyond Apptainer. This
+app supports that. The steps are:
+
+1. Build an image that contains Positron Server, the license file, and the R
+   and Python installs that users need. The example definition file below
+   is a starting point.
+2. Put the `.sif` file on a filesystem that every compute node mounts.
+3. Check the image on a compute node:
+
+   ```{.bash filename="Terminal"}
+   apptainer exec positron-server.sif positron-server --version
+   apptainer exec positron-server.sif \
+     /opt/positron-server/resources/activation/linux/<arch>/license-manager status
+   ```
+
+4. Set `apptainer_image` in `form.yml` to the path of the `.sif` file.
+   Leave `positron_server_dir` at `/opt/positron-server` if that is where
+   the image keeps the install, or empty if the image puts
+   `positron-server` on `PATH`.
+
+With `apptainer_image` set, the job runs:
+
+```{.bash filename="template/script.sh.erb"}
+apptainer exec --bind "${BINDS}" "<apptainer_image>" positron-server ...
+```
+
+`BINDS` is the session output directory, `TMPDIR` when it is set, and the
+value of `apptainer_binds`. Apptainer binds the home directory by default.
+Add any other filesystem the user needs, such as scratch or project space,
+to `apptainer_binds`.
+
+The image must have `positron-server` on `PATH`, or `positron_server_dir`
+must point at the install inside the image. The job passes
+`positron_server_dir/bin` to Apptainer through `APPTAINERENV_PREPEND_PATH`.
+
+This is an example definition file that unpacks the CDN archive and places
+the license file. Replace `<arch>` with `x86_64` or `aarch64`, and put
+`license.lic` next to the definition file before you build.
+
+```{.text filename="positron-server.def"}
+Bootstrap: docker
+From: rockylinux/rockylinux:9
+
+%files
+    license.lic /opt/license.lic
+
+%post
+    dnf install -y tar gzip
+    mkdir -p /opt/positron-server
+    CDN=https://cdn.posit.co/positron/releases/server
+    curl -L "$CDN/x86_64/positron-server-linux-x64-{{< var positron.version >}}.tar.gz" \
+      | tar -xz -C /opt/positron-server --strip-components=1
+    install -m 644 /opt/license.lic \
+      /opt/positron-server/resources/activation/linux/<arch>/license.lic
+    rm /opt/license.lic
+
+%environment
+    export PATH=/opt/positron-server/bin:$PATH
+```
+
+Build it with `apptainer build positron-server.sif positron-server.def`.
+Install R and Python into the image as well, or bind them in from the host,
+because the consoles inside Positron use the interpreters that the server
+process can see.
+
+::: callout-note
+Confirm with Posit whether your Positron Server build should run inside a
+container. The example definition is untested against a production site, and
+the command and bind list are the only parts this app controls.
+:::
+
+## GPUs {#gpus}
+
+When a user requests one or more GPUs:
+
+- `submit.yml.erb` adds `--gres=gpu:<n>` to the Slurm job.
+- With Apptainer, `script.sh.erb` adds `--nv` to `apptainer exec`, so the
+  NVIDIA driver and libraries from the host are visible inside the image.
+
+Positron Server itself does not use a GPU. The GPU is for the R and Python
+code that users run in the session. If your cluster has no GPUs, hide the
+field by setting `num_gpus: "0"` in `form.yml`.
+
+## License file location {#license-file-location}
+
+`positron-server` looks for a license in this order and uses the first one
+that validates:
+
+1. The `--license-key` and `--license-key-file` command-line options.
+2. The `POSITRON_LICENSE_KEY` and `POSITRON_LICENSE_KEY_FILE` environment
+   variables.
+3. A `license-key` file in the user data directory.
+4. A `.lic` file in the activation directory,
+   `<install>/resources/activation/linux/<arch>/`.
+
+The app sets none of the first three. They take a signed per-session key,
+which a product such as Posit Workbench mints, and on Positron Server
+2026.09.0 and newer they also take a raw `license.lic`. The license file
+from Posit goes in the activation directory, item 4, as
+[Get started](get_started.qmd#place-the-license-file) describes. That
+needs no change to the app and works on a read-only install.
+
+::: callout-important
+## Every session user can read the license file
+
+Each session runs `positron-server` as the user who launched it, and the
+server reads the license file itself. So the file must be readable by every
+user who can start a session, wherever you put it, and any of those users
+can copy it. If that is not acceptable at your site, the alternative is a
+service that mints a signed per-session key, item 1 or 2 above, from a
+signing key that users cannot read. Positron Server Pro and Posit Workbench
+license sessions this way. Setting up such a service is outside this
+guide. Ask Posit about it when you discuss your license.
+:::
+
+If you would rather keep the license file somewhere else, you have two
+options:
+
+- With Apptainer, bind the file to the exact path inside the image. Add
+  `/path/to/license.lic:/opt/positron-server/resources/activation/linux/<arch>/license.lic:ro`
+  to `apptainer_binds`. This also works on a read-only install.
+- Without Apptainer, pass the file to the server. Add
+  `--license-key-file "/path/to/license.lic"` to `POSITRON_ARGS` in
+  `script.sh.erb`, or export `POSITRON_LICENSE_KEY_FILE` before the server
+  starts. The server copies the file into the activation directory, so the
+  directory must be writable by the first session that starts, and later
+  sessions use the copy.
+
+## Next steps
+
+- [Troubleshooting](troubleshooting.qmd) covers a session that does not start.
+- [Test checklist](test_checklist.qmd) is the list to run and report against.

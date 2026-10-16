@@ -1,0 +1,43 @@
+---
+title: "positron-server-ood"
+---
+
+Run [Positron Server](https://github.com/posit-dev/positron) on an HPC cluster
+through [Open OnDemand](https://openondemand.org/) (OOD).
+
+## Overview
+
+`positron-server-ood` is an OOD interactive app. It adds a Positron tile to the
+OOD dashboard. When a user launches it, OOD submits a Slurm job that starts
+Positron Server on a compute node, and the user reaches the full Positron IDE
+in the browser through the OOD reverse proxy. Users need no local install.
+
+Positron is a data science IDE built on Code OSS, with:
+
+- Rich Python and R support
+- A console, variables pane, data explorer, and plot viewer
+- An integrated debugger, help pane, and version control
+- Access to the OpenVSX extension marketplace
+
+## Requirements
+
+- Open OnDemand 3.0 or newer, with a Slurm cluster and the `/rnode/` reverse
+  proxy enabled
+- Positron Server {{< var positron.version >}} or newer, installed where the
+  compute nodes can read it
+- A Positron Server license file from Posit. Positron Server refuses to start
+  in a hosted environment without one, and
+  [Get started](get_started.qmd#place-the-license-file) shows where it goes
+- Compute nodes with glibc 2.34 or newer and OpenSSL 3, such as RHEL 9 or
+  Ubuntu 22.04
+- At least 2.5 GB of RAM per session. See
+  [Memory](configuration.qmd#memory)
+
+## Where to start
+
+| Page | Use it to |
+|---|---|
+| [Get started](get_started.qmd) | Install Positron Server, place the license, install the app, and launch a session. |
+| [Configuration](configuration.qmd) | Change form fields and site settings, run inside Apptainer, use GPUs, add bind mounts. |
+| [Troubleshooting](troubleshooting.qmd) | Find out why a session does not start. |
+| [Test checklist](test_checklist.qmd) | Run through the features after install and report the results. |

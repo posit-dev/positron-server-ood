@@ -1,7 +1,8 @@
 ---
-name: Positron Server
+name: Positron
 category: Interactive Apps
 subcategory: Servers
 role: batch_connect
-description: Launch Positron Server in a containerized environment on DCC compute nodes.
+description: |
+  Launch Positron Server on a compute node and open it in your browser.
 icon: 'icon.png'
