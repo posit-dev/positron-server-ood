@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.19">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Configuration – positron-server-ood</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./_brand/logos/posit-horiz-full-color.png" rel="icon" type="image/png">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-cda858a997f762f21442baaf74cb975e.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-cda858a997f762f21442baaf74cb975e.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-cda858a997f762f21442baaf74cb975e.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-b2fc79449713649001a4cddf0acdeabc.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-b2fc79449713649001a4cddf0acdeabc.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-b2fc79449713649001a4cddf0acdeabc.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="./index.html" class="navbar-brand navbar-brand-logo">
+    <img src="./_brand/logos/posit-horiz-full-color.png" alt="Posit logo." class="navbar-logo light-content">
+    <img src="./_brand/logos/posit-horiz-full-color.png" alt="Posit logo." class="navbar-logo dark-content">
+    </a>
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">positron-server-ood</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./get_started.html"> 
+<span class="menu-text">Get started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="./configuration.html" aria-current="page"> 
+<span class="menu-text">Configuration</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./troubleshooting.html"> 
+<span class="menu-text">Troubleshooting</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./test_checklist.html"> 
+<span class="menu-text">Test checklist</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/posit-dev/positron-server-ood"> <i class="bi bi-github" role="img" aria-label="positron-server-ood GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#site-settings" id="toc-site-settings" class="nav-link active" data-scroll-target="#site-settings">Site settings</a>
+  <ul class="collapse">
+  <li><a href="#install-location" id="toc-install-location" class="nav-link" data-scroll-target="#install-location">Install location</a></li>
+  </ul></li>
+  <li><a href="#form-fields" id="toc-form-fields" class="nav-link" data-scroll-target="#form-fields">Form fields</a>
+  <ul class="collapse">
+  <li><a href="#memory" id="toc-memory" class="nav-link" data-scroll-target="#memory">Memory</a></li>
+  </ul></li>
+  <li><a href="#template-variables" id="toc-template-variables" class="nav-link" data-scroll-target="#template-variables">Template variables</a></li>
+  <li><a href="#run-inside-apptainer" id="toc-run-inside-apptainer" class="nav-link" data-scroll-target="#run-inside-apptainer">Run inside Apptainer</a></li>
+  <li><a href="#gpus" id="toc-gpus" class="nav-link" data-scroll-target="#gpus">GPUs</a></li>
+  <li><a href="#license-file-location" id="toc-license-file-location" class="nav-link" data-scroll-target="#license-file-location">License file location</a></li>
+  <li><a href="#next-steps" id="toc-next-steps" class="nav-link" data-scroll-target="#next-steps">Next steps</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Configuration</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>You configure the app in two files. <code>form.yml</code> holds the site settings and the form fields that users see. <code>submit.yml.erb</code> turns the form values into Slurm options. The scripts under <code>template/</code> start Positron Server on the compute node. This page covers each setting, then the Apptainer, GPU, and license options.</p>
+<section id="site-settings" class="level2">
+<h2 class="anchored" data-anchor-id="site-settings">Site settings</h2>
+<p>The site settings are the fixed values at the top of <code>form.yml</code>. Users do not see them. Each one is a string. An empty string turns the setting off.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Setting</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>cluster</code></td>
+<td><code>"hpc"</code></td>
+<td>The cluster the job is submitted to. It must match a file name in <code>/etc/ood/config/clusters.d/</code>, without <code>.yml</code>. The default matches the <a href="https://github.com/posit-dev/positron-server-ood/tree/main/dev">local validation cluster</a>.</td>
+</tr>
+<tr class="even">
+<td><code>positron_server_dir</code></td>
+<td><code>"/opt/positron-server"</code></td>
+<td>Directory of a plain Positron Server install. The job adds <code>&lt;positron_server_dir&gt;/bin</code> to <code>PATH</code>. Leave it empty when <code>positron-server</code> is already on <code>PATH</code>, or when the module below provides it.</td>
+</tr>
+<tr class="odd">
+<td><code>positron_module</code></td>
+<td><code>""</code></td>
+<td>An environment module to load before the server starts, for example <code>positron-server/2026.10.0</code>. The job runs <code>module load</code> with this value.</td>
+</tr>
+<tr class="even">
+<td><code>apptainer_image</code></td>
+<td><code>""</code></td>
+<td>Path to an Apptainer image. When set, the job runs <code>positron-server</code> inside this image. See <a href="#run-inside-apptainer">Run inside Apptainer</a>.</td>
+</tr>
+<tr class="odd">
+<td><code>apptainer_binds</code></td>
+<td><code>""</code></td>
+<td>Extra bind mounts for Apptainer, comma separated, for example <code>/scratch,/project</code>. Only used when <code>apptainer_image</code> is set.</td>
+</tr>
+</tbody>
+</table>
+<section id="install-location" class="level3">
+<h3 class="anchored" data-anchor-id="install-location">Install location</h3>
+<p>The job finds <code>positron-server</code> in this order:</p>
+<ol type="1">
+<li>If <code>positron_module</code> is set, the job loads that module.</li>
+<li>If <code>positron_server_dir</code> is set, the job puts <code>&lt;positron_server_dir&gt;/bin</code> first on <code>PATH</code>.</li>
+<li>The job runs <code>positron-server</code> from <code>PATH</code>.</li>
+</ol>
+<p>So a site with a module sets <code>positron_module</code> and leaves <code>positron_server_dir</code> empty. A site with a shared directory sets <code>positron_server_dir</code>. A site that already has <code>positron-server</code> on every user’s <code>PATH</code> leaves both empty.</p>
+</section>
+</section>
+<section id="form-fields" class="level2">
+<h2 class="anchored" data-anchor-id="form-fields">Form fields</h2>
+<p>These are the fields that users see when they launch the app. To change a default, edit the <code>value</code> of the field in <code>form.yml</code>. To hide a field and fix its value, replace the whole field entry with a string, for example <code>num_gpus: "0"</code>.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Label</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>working_dir</code></td>
+<td>Working directory</td>
+<td>user’s home</td>
+<td>The directory Positron opens. The user picks it with the OOD file picker. A path that does not exist falls back to the home directory.</td>
+</tr>
+<tr class="even">
+<td><code>bc_account</code></td>
+<td>Account</td>
+<td>none</td>
+<td>Slurm account, passed as <code>--account</code>. With no value, OOD omits the option and Slurm uses the user’s default account.</td>
+</tr>
+<tr class="odd">
+<td><code>bc_queue</code></td>
+<td>Partition</td>
+<td>none</td>
+<td>Slurm partition, passed as <code>--partition</code>. With no value, OOD omits the option and Slurm uses the default partition.</td>
+</tr>
+<tr class="even">
+<td><code>bc_num_hours</code></td>
+<td>Hours</td>
+<td><code>1</code></td>
+<td>Wall time in hours. OOD passes it as <code>--time</code>.</td>
+</tr>
+<tr class="odd">
+<td><code>num_cores</code></td>
+<td>Cores</td>
+<td><code>1</code></td>
+<td>CPU cores. Passed as <code>--cpus-per-task</code>.</td>
+</tr>
+<tr class="even">
+<td><code>memory_gb</code></td>
+<td>Memory (GB)</td>
+<td><code>2.5</code></td>
+<td>Memory for the job, in GB. Passed as <code>--mem</code> in MB. Positron Server needs at least 2.5 GB.</td>
+</tr>
+<tr class="odd">
+<td><code>num_gpus</code></td>
+<td>GPUs</td>
+<td><code>0</code></td>
+<td>Number of GPUs. When above 0, the job adds <code>--gres=gpu:&lt;n&gt;</code>. See <a href="#gpus">GPUs</a>.</td>
+</tr>
+</tbody>
+</table>
+<p><code>bc_account</code>, <code>bc_queue</code>, and <code>bc_num_hours</code> are OOD built-in fields. OOD turns them into Slurm options itself, and leaves the option out of the job when the field is blank. The <code>native</code> list in <code>submit.yml.erb</code> adds the rest:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>submit.yml.erb</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-filename="submit.yml.erb"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">script</span><span class="kw">:</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">native</span><span class="kw">:</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="st">"--nodes=1"</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="st">"--ntasks=1"</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="st">"--cpus-per-task=&lt;%= num_cores.blank? ? 1 : num_cores.to_i %&gt;"</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="st">"--mem=&lt;%= ((memory_gb.blank? ? 2.5 : memory_gb.to_f) * 1024).round %&gt;M"</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="at">&lt;%- if num_gpus.to_i &gt; 0 -%&gt;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="st">"--gres=gpu:&lt;%= num_gpus.to_i %&gt;"</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="at">&lt;%- end -%&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Add your own Slurm options to this list. For example, to make every session use a QOS, add <code>- "--qos=interactive"</code>.</p>
+<section id="memory" class="level3">
+<h3 class="anchored" data-anchor-id="memory">Memory</h3>
+<p>Allocate memory per session based on the size of the workload:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 31%">
+<col style="width: 28%">
+<col style="width: 40%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Workload</th>
+<th>Minimum</th>
+<th>Recommended</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Light: one console, a few extensions, simple scripts</td>
+<td>2 GB</td>
+<td>2.5 GB</td>
+</tr>
+<tr class="even">
+<td>Standard: several consoles, several extensions, app development</td>
+<td>2.5 GB</td>
+<td>4 GB</td>
+</tr>
+<tr class="odd">
+<td>Heavy: large datasets, language servers, several apps at once</td>
+<td>4 GB</td>
+<td>6 GB or more</td>
+</tr>
+</tbody>
+</table>
+<p>Slurm stops a session that goes over the request. Signs of too little memory are slow runtime switching, extensions that fail to install, and crashes during large operations.</p>
+</section>
+</section>
+<section id="template-variables" class="level2">
+<h2 class="anchored" data-anchor-id="template-variables">Template variables</h2>
+<p>The scripts in <code>template/</code> read the form values through <code>context</code>. They also set these variables:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Variable</th>
+<th>Set in</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>port</code></td>
+<td><code>before.sh.erb</code></td>
+<td>A free port on the compute node, from the OOD <code>find_port</code> helper.</td>
+</tr>
+<tr class="even">
+<td><code>password</code></td>
+<td><code>before.sh.erb</code></td>
+<td>A random 32-character connection token. OOD writes it to the session’s <code>connection.yml</code>, and the Connect button sends it as the <code>tkn</code> query parameter.</td>
+</tr>
+<tr class="odd">
+<td><code>POSITRON_CONNECTION_TOKEN_FILE</code></td>
+<td><code>before.sh.erb</code></td>
+<td>Path of the token file, <code>connection-token</code> in the session’s output directory, mode <code>600</code>. Passed to <code>positron-server</code> as <code>--connection-token-file</code>.</td>
+</tr>
+</tbody>
+</table>
+<p><code>script.sh.erb</code> starts the server with these options:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>template/script.sh.erb</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" data-filename="template/script.sh.erb"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">positron-server</span> <span class="dt">\</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--host</span> <span class="st">"0.0.0.0"</span> <span class="dt">\</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--port</span> <span class="st">"</span><span class="va">${port}</span><span class="st">"</span> <span class="dt">\</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--connection-token-file</span> <span class="st">"</span><span class="va">${POSITRON_CONNECTION_TOKEN_FILE}</span><span class="st">"</span> <span class="dt">\</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--accept-server-license-terms</span> <span class="dt">\</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--telemetry-level</span> off <span class="dt">\</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--disable-workspace-trust</span> <span class="dt">\</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--default-folder</span> <span class="st">"&lt;working_dir&gt;"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>--disable-workspace-trust</code> turns off the Code OSS workspace trust prompt. Without it, Positron opens the working directory in Restricted Mode and refuses to start a console until the user selects <strong>Trust this folder</strong>. The user picked the directory and owns the session, so the prompt adds nothing. Remove the option from <code>script.sh.erb</code> to bring the prompt back.</p>
+<p>The server keeps its data in <code>~/.positron-server</code> for each user. Extensions and settings persist from one session to the next.</p>
+<p><code>after.sh</code> waits up to 600 seconds for the port to open. Raise that number if your compute nodes are slow to start a job.</p>
+</section>
+<section id="run-inside-apptainer" class="level2">
+<h2 class="anchored" data-anchor-id="run-inside-apptainer">Run inside Apptainer</h2>
+<p>Many HPC sites run interactive apps from an Apptainer image rather than from a host install, so that the compute nodes need nothing beyond Apptainer. This app supports that. The steps are:</p>
+<ol type="1">
+<li><p>Build an image that contains Positron Server, the license file, and the R and Python installs that users need. The example definition file below is a starting point.</p></li>
+<li><p>Put the <code>.sif</code> file on a filesystem that every compute node mounts.</p></li>
+<li><p>Check the image on a compute node:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>Terminal</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-filename="Terminal"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">apptainer</span> exec positron-server.sif positron-server <span class="at">--version</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">apptainer</span> exec positron-server.sif <span class="dt">\</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  /opt/positron-server/resources/activation/linux/<span class="op">&lt;</span>arch<span class="op">&gt;</span>/license-manager status</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div></li>
+<li><p>Set <code>apptainer_image</code> in <code>form.yml</code> to the path of the <code>.sif</code> file. Leave <code>positron_server_dir</code> at <code>/opt/positron-server</code> if that is where the image keeps the install, or empty if the image puts <code>positron-server</code> on <code>PATH</code>.</p></li>
+</ol>
+<p>With <code>apptainer_image</code> set, the job runs:</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>template/script.sh.erb</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" data-filename="template/script.sh.erb"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">apptainer</span> exec <span class="at">--bind</span> <span class="st">"</span><span class="va">${BINDS}</span><span class="st">"</span> <span class="st">"&lt;apptainer_image&gt;"</span> positron-server ...</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>BINDS</code> is the session output directory, <code>TMPDIR</code> when it is set, and the value of <code>apptainer_binds</code>. Apptainer binds the home directory by default. Add any other filesystem the user needs, such as scratch or project space, to <code>apptainer_binds</code>.</p>
+<p>The image must have <code>positron-server</code> on <code>PATH</code>, or <code>positron_server_dir</code> must point at the install inside the image. The job passes <code>positron_server_dir/bin</code> to Apptainer through <code>APPTAINERENV_PREPEND_PATH</code>.</p>
+<p>This is an example definition file that unpacks the CDN archive and places the license file. Replace <code>&lt;arch&gt;</code> with <code>x86_64</code> or <code>aarch64</code>, and put <code>license.lic</code> next to the definition file before you build.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>positron-server.def</strong></pre>
+</div>
+<pre class="text" data-filename="positron-server.def"><code>Bootstrap: docker
+From: rockylinux/rockylinux:9
+
+%files
+    license.lic /opt/license.lic
+
+%post
+    dnf install -y tar gzip
+    mkdir -p /opt/positron-server
+    CDN=https://cdn.posit.co/positron/releases/server
+    curl -L "$CDN/x86_64/positron-server-linux-x64-2026.10.0-297.tar.gz" \
+      | tar -xz -C /opt/positron-server --strip-components=1
+    install -m 644 /opt/license.lic \
+      /opt/positron-server/resources/activation/linux/&lt;arch&gt;/license.lic
+    rm /opt/license.lic
+
+%environment
+    export PATH=/opt/positron-server/bin:$PATH</code></pre>
+</div>
+<p>Build it with <code>apptainer build positron-server.sif positron-server.def</code>. Install R and Python into the image as well, or bind them in from the host, because the consoles inside Positron use the interpreters that the server process can see.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Confirm with Posit whether your Positron Server build should run inside a container. The example definition is untested against a production site, and the command and bind list are the only parts this app controls.</p>
+</div>
+</div>
+</section>
+<section id="gpus" class="level2">
+<h2 class="anchored" data-anchor-id="gpus">GPUs</h2>
+<p>When a user requests one or more GPUs:</p>
+<ul>
+<li><code>submit.yml.erb</code> adds <code>--gres=gpu:&lt;n&gt;</code> to the Slurm job.</li>
+<li>With Apptainer, <code>script.sh.erb</code> adds <code>--nv</code> to <code>apptainer exec</code>, so the NVIDIA driver and libraries from the host are visible inside the image.</li>
+</ul>
+<p>Positron Server itself does not use a GPU. The GPU is for the R and Python code that users run in the session. If your cluster has no GPUs, hide the field by setting <code>num_gpus: "0"</code> in <code>form.yml</code>.</p>
+</section>
+<section id="license-file-location" class="level2">
+<h2 class="anchored" data-anchor-id="license-file-location">License file location</h2>
+<p><code>positron-server</code> looks for a license in this order and uses the first one that validates:</p>
+<ol type="1">
+<li>The <code>--license-key</code> and <code>--license-key-file</code> command-line options.</li>
+<li>The <code>POSITRON_LICENSE_KEY</code> and <code>POSITRON_LICENSE_KEY_FILE</code> environment variables.</li>
+<li>A <code>license-key</code> file in the user data directory.</li>
+<li>A <code>.lic</code> file in the activation directory, <code>&lt;install&gt;/resources/activation/linux/&lt;arch&gt;/</code>.</li>
+</ol>
+<p>The app sets none of the first three. They take a signed per-session key, which a product such as Posit Workbench mints, and on Positron Server 2026.09.0 and newer they also take a raw <code>license.lic</code>. The license file from Posit goes in the activation directory, item 4, as <a href="./get_started.html#place-the-license-file">Get started</a> describes. That needs no change to the app and works on a read-only install.</p>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Every session user can read the license file
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Each session runs <code>positron-server</code> as the user who launched it, and the server reads the license file itself. So the file must be readable by every user who can start a session, wherever you put it, and any of those users can copy it. If that is not acceptable at your site, the alternative is a service that mints a signed per-session key, item 1 or 2 above, from a signing key that users cannot read. Positron Server Pro and Posit Workbench license sessions this way. Setting up such a service is outside this guide. Ask Posit about it when you discuss your license.</p>
+</div>
+</div>
+<p>If you would rather keep the license file somewhere else, you have two options:</p>
+<ul>
+<li>With Apptainer, bind the file to the exact path inside the image. Add <code>/path/to/license.lic:/opt/positron-server/resources/activation/linux/&lt;arch&gt;/license.lic:ro</code> to <code>apptainer_binds</code>. This also works on a read-only install.</li>
+<li>Without Apptainer, pass the file to the server. Add <code>--license-key-file "/path/to/license.lic"</code> to <code>POSITRON_ARGS</code> in <code>script.sh.erb</code>, or export <code>POSITRON_LICENSE_KEY_FILE</code> before the server starts. The server copies the file into the activation directory, so the directory must be writable by the first session that starts, and later sessions use the copy.</li>
+</ul>
+</section>
+<section id="next-steps" class="level2">
+<h2 class="anchored" data-anchor-id="next-steps">Next steps</h2>
+<ul>
+<li><a href="./troubleshooting.html">Troubleshooting</a> covers a session that does not start.</li>
+<li><a href="./test_checklist.html">Test checklist</a> is the list to run and report against.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+<p>Proudly supported by <a href="https://posit.co/"><img src="images/posit-logo.svg" class="img-fluid" alt="Posit PBC" width="65"></a></p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>
