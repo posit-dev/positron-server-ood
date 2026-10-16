@@ -123,8 +123,28 @@ if your compute nodes are slow to start a job.
 
 ## Run inside Apptainer {#run-inside-apptainer}
 
-Set `apptainer_image` to run Positron Server from an Apptainer image instead
-of a host install. The job then runs:
+Many HPC sites run interactive apps from an Apptainer image rather than from
+a host install, so that the compute nodes need nothing beyond Apptainer. This
+app supports that. The steps are:
+
+1. Build an image that contains Positron Server, the license file, and the R
+   and Python installs that users need. The example definition file below
+   is a starting point.
+2. Put the `.sif` file on a filesystem that every compute node mounts.
+3. Check the image on a compute node:
+
+   ```{.bash filename="Terminal"}
+   apptainer exec positron-server.sif positron-server --version
+   apptainer exec positron-server.sif \
+     /opt/positron-server/resources/activation/linux/<arch>/license-manager status
+   ```
+
+4. Set `apptainer_image` in `form.yml` to the path of the `.sif` file.
+   Leave `positron_server_dir` at `/opt/positron-server` if that is where
+   the image keeps the install, or empty if the image puts
+   `positron-server` on `PATH`.
+
+With `apptainer_image` set, the job runs:
 
 ```{.bash filename="template/script.sh.erb"}
 apptainer exec --bind "${BINDS}" "<apptainer_image>" positron-server ...
@@ -205,6 +225,19 @@ which a product such as Posit Workbench mints, and on Positron Server
 from Posit goes in the activation directory, item 4, as
 [Get started](get_started.qmd#place-the-license-file) describes. That
 needs no change to the app and works on a read-only install.
+
+::: callout-important
+## Every session user can read the license file
+
+Each session runs `positron-server` as the user who launched it, and the
+server reads the license file itself. So the file must be readable by every
+user who can start a session, wherever you put it, and any of those users
+can copy it. If that is not acceptable at your site, the alternative is a
+service that mints a signed per-session key, item 1 or 2 above, from a
+signing key that users cannot read. Positron Server Pro and Posit Workbench
+license sessions this way. Setting up such a service is outside this
+guide. Ask Posit about it when you discuss your license.
+:::
 
 If you would rather keep the license file somewhere else, you have two
 options:

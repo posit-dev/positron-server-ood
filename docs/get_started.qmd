@@ -8,6 +8,12 @@ compute nodes can read it, place the license file, install this app on the OOD
 host, and check that the OOD reverse proxy is on. Then you launch a session and
 run the [test checklist](test_checklist.qmd).
 
+The guide installs Positron Server directly on a shared filesystem, which is
+the shortest path to a first session. If your site runs interactive apps from
+Apptainer images, do Steps 1 and 2 inside an image instead, then continue
+with Step 3. [Run inside Apptainer](configuration.qmd#run-inside-apptainer)
+covers the image.
+
 ## Before you start
 
 You need:
@@ -92,7 +98,10 @@ install -m 644 /path/to/your-license.lic \
 
 The license file needs mode `644`. Each session runs `positron-server` as the
 user who launched it, and `positron-server` reads the license file itself.
-With a root-only mode such as `600`, every session fails to start.
+With a root-only mode such as `600`, every session fails to start. This also
+means that every user who can start a session can read the file. See
+[License file location](configuration.qmd#license-file-location) for what
+that implies and for the alternative.
 
 Before you continue, confirm that `license-manager` accepts the license file.
 Run this on a compute node, or on any host with the same architecture:
